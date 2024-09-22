@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="CommonOperations.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        window.onload = function() {
+            document.addEventListener("keydown", function(event){
+                if (event.key === "Escape"){
+                    adminAccess();
+
+                }
+            })
+            document.getElementById("password").addEventListener('keydown', handleCommand);
+
+        };
+    </script>
+    <meta charset="UTF-8">
+    <title>Medical Care</title>
+    <style>
+        #background-container {
+            position: relative;
+        }
+
+        #background-container img {
+            width: 100%;
+            height: auto;
+        }
+
+        #form-container {
+            position: absolute;
+            top: 10%;
+            left: 60%;
+            /*transform: translate(-50%, -50%); */
+        }
+        #form-container span {
+            color: white;
+        }
+
+        #form-container input {
+            
+            /*margin-bottom: 10px;*/
+            margin: auto;
+            width: 170px;
+        }
+
+        #login-btn {
+            display: block;
+            float: center;
+            width: 170px;
+            background-color: rgb(101, 105, 128);
+            color: white;
+        }
+        .tab {
+        display: none;
+        }
+        .tab-buttons {
+        display: flex;
+        cursor: pointer;
+        }
+        .tab-buttons div {
+        padding: 10px;
+        background-color: #649fec;
+        border: 1px solid #ccc;
+        color: white;
+        margin-right: 5px;
+        }
+        .tab-buttons .active {
+        background-color: #402cf0;
+        }
+        .tab-content {
+        padding: 10px;
+        }
+    </style>
+</head>
+<body>
+<div id="background-container">
+    <img src="insulin.jpg" alt="Background Image">
+    <div id="form-container">
+        <div class="tab-buttons">
+            <div onclick="openTab(event, 'tab1')" class="active">Login</div>
+            <div onclick="openTab(event, 'tab2')">Patient SignUp</div>
+            <div onclick="openTab(event, 'tab3')">Doctor SignUp</div>
+          </div>
+        
+        
+        <div id="tab1" class="tab tab-content" style="display: block;">
+            <input type="text" id="username" placeholder="Username" style="display: block; margin-bottom: 10px;">
+            <input type="password" id="password" placeholder="Password" style="display: block; margin-bottom: 10px;">
+            <button id="login-btn" onclick="login()" style="margin: auto;">Login</button>
+          </div>
+          <div id="tab2" class="tab tab-content">
+                <table>
+                    <tbody style="background-color: gray;">
+                        <tr>
+                            <td>
+                                <span>Name:</span>
+                            </td>
+                            <td>
+                                <input type="text" id="name" placeholder="Enter Name">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span>Surname:</span>
+                            </td>
+                            <td>
+                                <input type="text" id="surname" placeholder="Enter Surname">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span>Gender:</span>
+                            </td>
+                            <td>
+                                <select id="gender">
+                                    <option value="F">Female</option>
+                                    <option value="M">Male</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span>Age:</span>
+                            </td>
+                            <td>
+                                <input type="text" id="age" placeholder="Enter your Age">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span>Weight:</span>
+                            </td>
+                            <td>
+                                <input type="text" id="weight" placeholder="Enter your Weight">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span>Diagnosis:</span>
+                            </td>
+                            <td>
+                                <select id="diagnosis">
+                                    <option value="TYPE I">TYPE I</option>
+                                    <option value="TYPE II">TYPE II</option>
+                                    <option value="NoN">NoN</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span>Address:</span>
+                            </td>
+                            <td>
+                                <input type="text" id="address" placeholder="Enter Office Address">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span>Email:</span>
+                            </td>
+                            <td>
+                                <input type="email" id="email" placeholder="Enter your Email" >
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span>Password:</span>
+                            </td>
+                            <td>
+                                <input type="password" id="patientPassword" placeholder="Enter your Password">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span>Doctor's ID:</span>
+                            </td>
+                            <td>
+                                <input type="text" id="doctorId" placeholder="Enter your Doctor's ID">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="text-align: center;"><button id="login-btn" onclick="signUpPatient()" style="margin: auto;">Register</button></td>
+                        </tr>
+                        
+
+
+
+                        
+                    </tbody>
+                </table>
+          </div>
+          <div id="tab3" class="tab tab-content">
+
+            <table>
+                <tbody style="background-color: gray;">
+                    <tr>
+                        <td>
+                            <span>Name:</span>
+                        </td>
+                        <td>
+                            <input type="text" id="doctorsName" placeholder="Enter Name">
+                        </td>
+
+                    </tr>
+                    <tr>
+                        <td>
+                            <span>Surname:</span>
+                        </td>
+                        <td>
+                            <input type="text" id="doctorsSurname" placeholder="Enter Surname">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span>Age:</span>
+                        </td>
+                        <td>
+                            <input type="text" id="doctorsAge" placeholder="Enter your Age">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span>Office Address:</span>
+                        </td>
+                        <td>
+                            <input type="text" id="doctorsAddress" placeholder="Enter your Address">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span>Email:</span>
+                        </td>
+                        <td>
+                            <input type="email" id="doctorsEmail" placeholder="Enter your Email" >
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span>Password:</span>
+                        </td>
+                        <td>
+                            <input type="password" id="doctorsPassword" placeholder="Enter your Password" >
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="text-align: center;"><button id="login-btn" onclick="signUpDoctor()" style="margin: auto;">Register</button></td>
+                    </tr>
+                </tbody>
+            </table>
+          </div>
+    </div>
+</div>
+
+
+
+</body>
+
+<script>
+function login() {
+    
+    
+
+    let username1 = document.getElementById("username").value;
+    let password1 = document.getElementById("password").value;
+
+
+
+    const url = getEndPoint("/login");
+
+    const jsonData = {
+            username: username1,
+            password: password1
+    };
+
+    const jsonString = JSON.stringify(jsonData, null, 2);
+
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+
+        },
+        body: jsonString})
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Handle the response from the server
+            if (data.status == "Success") {
+                
+                
+                let userId=data.userId;
+                let userType=data.userType;
+                let patientId=data.patientId;
+                let doctorId=data.doctorId;
+                let login_status = data.status;
+                sessionStorage.setItem("userId",userId);
+                sessionStorage.setItem("userType", userType);
+                sessionStorage.setItem("patientId", patientId);
+                sessionStorage.setItem("doctorId", doctorId);
+                sessionStorage.setItem("login_status", status);
+
+                if (data.userType === "DOCTOR") {
+                    window.location.href = 'Doctor_Home_Page.html';
+                }
+                else if (data.userType === "PATIENT") {
+                    window.location.href = 'Patient_Home_Page.html';
+                }
+                else alert ("Something went wrong.");
+            }
+            else{
+                alert("Incorrect Username or Password")
+            }
+            console.log(data);
+        })
+        .catch(error => {
+            // Handle errors during the fetch
+            alert ("Something went wrong.");
+            console.error('Fetch error:', error);
+        });
+
+}
+
+function handleCommand(event){
+    if(event.key === 'Enter') login();
+}
+
+function signUpPatient(){
+
+    var dataToSend;
+    var password; 
+
+   
+        password = $("#patientPassword").val();
+        dataToSend = {
+            "userType" : "PATIENT",
+            "name" : $("#name").val(),
+            "surname": $("#surname").val(),
+            "gender": $("#gender").val(),
+            "address": $("#address").val(),
+            "age": $("#age").val(),
+            "weight": $("#weight").val(),
+            "doctorId": $("#doctorId").val(),
+            "diagnosis": $("#diagnosis").val(),
+            "email": $("#email").val(),
+            "password": $("#patientPassword").val()
+        }
+    
+
+
+    const jsonString = JSON.stringify(dataToSend, null, 2);
+
+
+    fetch(getEndPoint("/sign_up"), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+
+        },
+        body: jsonString})
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            localStorage.setItem("message",data.message);
+            $("#username").val(data.userId);
+            $("#password").val(password);
+            login();
+
+        })
+        .catch(error => {
+            alert ("Something went wrong.");
+            console.error('Fetch error:', error);
+        });
+
+
+
+
+
+}
+
+function signUpDoctor(event){
+
+
+ 
+    password = $("#doctorsPassword").val();
+    dataToSend = {
+        "userType" : "DOCTOR",
+        "name" : $("#doctorsName").val(),
+        "surname": $("#doctorsSurname").val(),
+        "address": $("#doctorsAddress").val(),
+        "age": $("#doctorsAge").val(),
+        "email": $("#doctorsEmail").val(),
+        "password": $("#doctorsPassword").val()
+    }
+
+    
+
+
+    const jsonString = JSON.stringify(dataToSend, null, 2);
+
+
+    fetch(getEndPoint("/sign_up"), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+
+        },
+        body: jsonString})
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            localStorage.setItem("message",data.message);
+            $("#username").val(data.userId);
+            $("#password").val(password);
+            login();
+
+        })
+        .catch(error => {
+            alert ("Something went wrong.");
+            console.error('Fetch error:', error);
+        });
+
+
+
+
+
+}
+
+</script>
+
+<script>
+    function openTab(event, tabId) {
+      // Hide all tabs
+      const tabs = document.querySelectorAll('.tab');
+      tabs.forEach(tab => {
+        tab.style.display = 'none';
+      });
+  
+      // Remove active class from all buttons
+      const tabButtons = document.querySelectorAll('.tab-buttons div');
+      tabButtons.forEach(button => {
+        button.classList.remove('active');
+      });
+  
+      // Show the selected tab
+      document.getElementById(tabId).style.display = 'block';
+  
+      // Add active class to the clicked button
+      event.currentTarget.classList.add('active');
+    }
+
+
+   
+  </script>
+
+</html>

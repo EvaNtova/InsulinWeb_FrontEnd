@@ -1,0 +1,1451 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="GeneralStyling.css">
+    <script src="CommonOperations.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Patient Home Page</title>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        loadAccesibilityList();
+        });
+        
+        window.onload = function() {
+            loadPatientIdData();
+            loadDefaultDiagram();
+            loadPatientHistory();
+            welcomeMessage();
+            localStorage.clear();
+            loadDates();
+        };
+    </script>
+    <style>
+        .container{
+            overflow: hidden;
+        }
+        .leftDiv{
+            float:left;
+            width: 35%;
+            margin:auto;
+        }
+        .rightDiv{
+            float:right;
+            width: 65%;
+            margin:auto;
+        }
+        .diagram{
+            margin:auto;
+            text-align: center;
+        }
+    </style>
+</head>
+    <body>
+        <header>
+            <img src="Top_Image.png" alt="Flexible Image">
+        </header>
+    
+        <nav>
+            <ul id="menu">
+                
+            </ul>
+        </nav>
+
+        <div id="welcomeMessage"></div>
+
+
+        <section>
+
+            <div class="container">
+                <div class="leftDiv">
+                    <table id="patientDetails" style="margin: auto;">
+                        <thead>
+                            <tr>
+                                <th>Parameters</th>
+                                <th>Values</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Patient ID</td>
+                                <td><input type="text" id="patientId" name="patientId" readonly></td>
+                            </tr>
+                            <tr>
+                                <td>Name</td>
+                                <td><input type="text" id="name" name="name" readonly></td>
+                            </tr>
+                            <tr>
+                                <td>Surname</td>
+                                <td><input type="text" id="surname" name="surname" readonly></td>
+                            </tr>
+                            <tr>
+                                <td>Gender</td>
+                                <td><input type="text" id="gender" name="gender" readonly></td>
+                            </tr>
+                            <tr>
+                                <td>Age</td>
+                                <td><input type="text" id="age" name="age" ></td>
+                            </tr>
+                            <tr>
+                                <td>Weight</td>
+                                <td><input type="text" id="weight" name="weight" >
+                            </tr>
+                            <tr>
+                                <td>Diagnosis</td>
+                                <td><input type="text" id="diagnosis" name="diagnosis" readonly></td>
+                            </tr>
+                            <tr>
+                                <td>Correction Factor</td>
+                                <td><input type="text" id="correction_factor" name="correction_factor" readonly></td>
+                            </tr>
+                            <tr>
+                                <td>Blood - Sugar Target</td>
+                                <td><input type="text" id="blood_sugar_target" name="blood_sugar_target" readonly></td>
+                            </tr>
+                            <tr>
+                                <td>Insulin Per CarboHydrate</td>
+                                <td id="carbon_cell"><input type="text" id="carbon" name="carbon" readonly></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="inputButton" onclick="insertNewData()">Save Changes</button>
+
+                    <div>
+                        <hr>
+                        <div class="selector">
+                            <span class="selector">Select Diagram:</span>
+                            <select id="diagramComboBox" class="comboBoxStyling">
+                                <option value="TimeInRange">Time in Range</option>
+                                <option value="GlucoseInsulin">Glucose - Insulin</option>
+                            </select>
+                            <span style="margin-left: 20px;">From:</span>
+                            <select class="comboBoxStyling" id="dateSelectorFrom" onchange="loadDates(true)"></select>
+                            <span style="margin-left: 20px;">To:</span>
+                            <select class="comboBoxStyling" id="dateSelectorTo"></select>
+                            <button onclick="loadDiagram()" class="inputButton" style="background-color: aqua; color: black;">Load Diagram</button>
+                        </div>
+                    </div>
+
+
+                </div>
+                <div id="diagram" class="rightDiv">
+                    <div id="message">
+                
+                    </div>
+                    <img id = "loadDiagram" src = "Insulin_struct.png" style="border: 0" width="1100" height="700" frameborder="0" scrolling="no">
+                </div>
+            </div>
+
+
+
+
+
+        </section>
+
+
+        
+
+        <section>
+            <div class="table-container">
+                <div style="float: left; width: 50%; margin-top: 10px;">
+                    <form id="uploadForm">
+                        <span style="background-color: grey; color: white; padding-top: 9px; padding-bottom: 10px;">Upload history file:</span>
+                        <input type="file" id="fileInput" accept=".xlsx, .xls" onchange="handleFileSelect(event)" class="inputButton" style="background-color: grey;">
+                        <button type="button" onclick="uploadFile()" class="inputButton" style="background-color: grey; padding-top: 11px; padding-bottom: 11px;">Upload</button>
+                      </form>
+                </div>
+                <div style="float: right; width: 50%; margin-top: 10px;">
+                    <input type="checkbox" onchange="handleCheckBoxPredictions(this)" checked>
+                    <span>Predictions</span>
+                </div>
+                <table id="patientTable">
+                    <thead>
+                        <tr>
+                            <th>A/A</th>
+                            <th>TimeStamp</th>
+                            <th>Glucose Before</th>
+                            <th>Food Carbo in gramms</th>
+                            <th>Insulin Dosage in units</th>
+                            <th>Glucose After</th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="patientHistoryTBody">
+                        
+                        <tr>
+                            <td>0</td>
+                            <td id="time_0"></td>
+                            <td><input type="text" class="inputCells" id="glucoseBefore_0" placeholder="Enter your current glucose" onfocus="openPredictionDiv()" ></td>
+                            <td><input type="text" class="inputCells" id="foodCarbon_0" placeholder="Hydrocarbons from food" onfocus="openFoodTableDiv()"></td>
+                            <td><input type="text" class="inputCells" id="insulinDosage_0" placeholder="Enter Insulin Dosage" ></td>
+                            <td><input type="text" class="inputCells" id="glucoseAfter_0" placeholder="Enter your Glucose after Insulin"></td>
+                            <td colspan="2"><button class="inputButton" onclick="saveline(event)" id="0">Save</button></td>
+                        </tr>
+                        <tr>
+                            <td colspan="8" class="specialCell">
+                                <div id="insulinCalculatorDiv" class="insulinCalc">
+
+                                </div>
+
+
+                            </td>
+                        </tr>    
+                        
+                    </tbody>
+                </table>
+            </div>
+
+        </section>
+    </body>
+
+    <script>
+        var BlockPredictions = false;
+        var Warning = false;
+        var predictionDivopen = false;
+        var foodTableActive = false;
+        var InsulinPredictionFlag = false;
+        var FoodPredictionFlag = false;
+    
+
+       
+        function handleCheckBoxPredictions(checkBox) {
+            if (checkBox.checked) {
+                BlockPredictions = false;
+                console.log("Predictions Allowed");
+            } else {
+                clearPredictionDiv();
+                BlockPredictions = true;
+                console.log("Predictions Blocked");
+                
+            }
+        }
+
+        function reloadPatientTable(flag){
+            var tbody = document.getElementById("patientHistoryTBody");
+            for(var i=1;i<200;i++){
+                var id = "" + i;
+                var button = document.getElementById(i);
+                var deleteButton = document.getElementById("deleteLine_" + i);
+                if (button == null) break;
+                button.removeEventListener('click',saveline);
+                deleteButton.removeEventListener('click',deleteLineForHistoryTable);
+                var tr = document.getElementById("patientHistoryRow_"+id);
+                tbody.removeChild(tr);
+            }
+            if(flag){
+                document.getElementById("glucoseBefore_0").value ="";
+                document.getElementById("foodCarbon_0").value ="";
+                document.getElementById("insulinDosage_0").value ="";
+                document.getElementById("glucoseAfter_0").value ="";
+
+            }
+            
+            loadPatientHistory();
+            loadDefaultDiagram();
+            
+        }
+
+        function loadPatientHistory(){
+        const urlToGetPatientsData = getEndPoint("/patient_history");
+        patientId = sessionStorage.getItem("patientId")
+
+
+        const dataToSend = {
+            "patientId": patientId 
+        }
+
+        fetch(urlToGetPatientsData, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(dataToSend)
+        })
+        .then(response => response.json())
+        .then(data => {
+            const tableDiv = document.getElementById("patientHistoryTBody");
+
+            data.forEach(item => {
+                tableDiv.appendChild(createRow(item));
+            });
+            
+        })
+        .catch(error => {
+            console.log('Error fetching data:', error);
+            //alert("Something went wrong while retriving data");
+        });
+     
+        }
+
+        function loadPatientIdData(){
+            const url = getEndPoint("/patient_details");
+            const dataToSend = {
+                "patientId": sessionStorage.getItem("patientId")
+            }
+            const jsonString = JSON.stringify(dataToSend, null, 2);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: jsonString
+            })
+            .then(response =>response.json())
+            .then( data => {
+                document.getElementById("patientId").value = data.patientId;
+                document.getElementById("name").value = data.name;
+                document.getElementById("surname").value = data.surname;
+                document.getElementById("gender").value = data.gender;
+                document.getElementById("age").value = data.age;
+                document.getElementById("weight").value = data.weight;
+                document.getElementById("diagnosis").value = data.diagnosis;
+                document.getElementById("carbon").value = data.insul_per_carhyd;
+                document.getElementById("correction_factor").value = data.correction_factor;
+                document.getElementById("blood_sugar_target").value = data.blood_sugar_target;
+            })
+            .catch(error => {
+                console.error('Error:', error); // Handle errors
+            }); 
+        }
+
+        function loadDefaultDiagram() {
+                const dataToSend = {
+                "patientId": sessionStorage.getItem("patientId"),
+                "dateFrom": "NaN",
+                "dateTo": "NaN",
+                "diagramType": "TimeInRange"
+                };
+            
+
+            const url = getEndPoint("/load_diagrams");
+            const jsonString = JSON.stringify(dataToSend, null, 2);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: jsonString
+            })
+            .then(response => {
+                if (response.status == 500) {
+                    throw new Error("No available diagram");
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                const imageUrl = URL.createObjectURL(blob);
+                const imgElement = document.getElementById("loadDiagram");
+                if (imageUrl) {
+                    imgElement.src = imageUrl;
+                }
+            })
+            .catch(error => {
+                if (error.message === "No available diagram") {
+                    console.log("No available Diagram");
+                } else {
+                    console.error('Error:', error); // Handle other errors
+                }
+            });
+        }
+
+        function createRow(data){
+            let tableRow = document.createElement('tr');
+        
+            tableRow.id = "patientHistoryRow_" + data.asc_number;
+
+            tableRow.appendChild(createTD(data.asc_number,"acs_number_" + data.asc_number ));
+            tableRow.appendChild(createTD(data.timestamp , "time_" + data.asc_number ));
+            tableRow.appendChild(createTDWithInput(data.glucose_before, "glucoseBefore_"+ data.asc_number));
+            tableRow.appendChild(createTDWithInput(data.food_carbo, "foodCarbon_"+ data.asc_number));
+            tableRow.appendChild(createTDWithInput(data.insulin_dosage, "insulinDosage_"+ data.asc_number));
+            tableRow.appendChild(createTDWithInput(data.glucose_after, "glucoseAfter_"+ data.asc_number));
+            tableRow.appendChild(createTDwithButton(data.asc_number));
+            tableRow.appendChild(createTDwithDeleteButton("deleteLine_" + data.asc_number));
+
+            return tableRow;
+        }
+
+        function createTD(content,id){
+            var td = document.createElement('td');
+            td.textContent = content;
+            td.id = id;
+            return td;
+        }
+
+        function createTDWithInput(content,id){
+            var TD = document.createElement('td');
+            var textField = document.createElement('input');
+            textField.id = id
+            textField.value = content;
+            textField.classList.add("inputCells")
+            TD.appendChild(textField);
+            return TD;
+
+        }
+
+        function createTDwithButton(id){
+            var td = document.createElement('td');
+            var saveButton = document.createElement('button');
+            saveButton.classList.add("inputButton");
+            saveButton.id = id;
+            saveButton.addEventListener('click', saveline);
+            saveButton.innerHTML = "Save Line"
+            td.appendChild(saveButton);
+            return td;
+        }
+
+        function createTDwithDeleteButton(id){
+            var td = document.createElement('td');
+            var deleteButton = document.createElement('button');
+            deleteButton.classList.add("inputButton");
+            deleteButton.style.backgroundColor = "red";
+            deleteButton.id = id;
+            deleteButton.addEventListener('click', deleteLineForHistoryTable);
+            deleteButton.innerHTML = "Delete Line"
+            td.appendChild(deleteButton);
+            return td;
+        } 
+
+        function saveline(event){
+            var button = event.target;
+            var row = button.id;
+            var timestamp;
+
+            if(button.id == "0"){
+                timestamp = "NaN";
+            }
+            else{
+                timestamp = document.getElementById("time_" + row).textContent;
+            }
+            var glucose_after = document.getElementById("glucoseAfter_" + row).value;
+            if(glucose_after == "") glucose_after =-1
+            var food_carbon = document.getElementById("foodCarbon_" + row).value;
+            if (food_carbon == "") food_carbon = 0;
+
+            const dataToSend = {
+                "patientId" : sessionStorage.getItem("patientId"),
+                "timestamp" : timestamp,
+                "glucoseBefore" : document.getElementById("glucoseBefore_" + row).value,
+                "foodCarbo" : food_carbon,
+                "insulinDosage" :document.getElementById("insulinDosage_" + row).value,
+                "glucoseAfter" :glucose_after
+            }
+
+            const urlToSendMeasurment = getEndPoint("/patient_measure_insert");
+                
+
+            const jsonString = JSON.stringify(dataToSend, null, 2);
+            fetch(urlToSendMeasurment, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: jsonString
+                })
+            .then(response => response.json())
+            .then(data =>{
+                //alert("Saved Succesfully");
+                if(button.id == "0"){
+                    reloadPatientTable(true);
+                }
+                else reloadPatientTable(false);
+            })
+            .catch(error => {
+                console.error('Error:', error); // Handle errors
+            });
+        }
+
+        function deleteLineForHistoryTable(){
+            var button = event.target;
+            var temp = button.id.split("_");
+            var row = temp[1];
+            var timestamp = document.getElementById("time_" + row).textContent;
+
+            const urlToDeleteMeasurment = getEndPoint("/patient_measure_delete");
+            const dataToSend = {
+                "patientId" : sessionStorage.getItem("patientId"),
+                "timestamp" : timestamp
+            }
+                
+
+            const jsonString = JSON.stringify(dataToSend, null, 2);
+            fetch(urlToDeleteMeasurment, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: jsonString
+                })
+            .then(response => response.json())
+            .then(data =>{
+                reloadPatientTable(false);
+            })
+            .catch(error => {
+                console.error('Error:', error); 
+            });
+
+            
+
+        }
+
+        function clearPredictionDiv(){
+            removeEventListenersFromPredictionDiv();
+            const insulinCalculatorDiv = document.getElementById("insulinCalculatorDiv");
+            predictionDivopen = false;
+            foodTableActive = false;
+            while (insulinCalculatorDiv.firstChild){
+                insulinCalculatorDiv.removeChild(insulinCalculatorDiv.firstChild);
+            }
+            if (Warning){
+                document.getElementById("glucoseBefore_0").classList.remove("warning");
+                changePlaceholderColor(document.getElementById("glucoseBefore_0"),"gray");
+                Warning = false;
+            }
+
+
+        }
+
+        function openPredictionDiv(){
+            if(InsulinPredictionFlag) return;
+            if (BlockPredictions) return;
+            if (predictionDivopen) return;
+            clearPredictionDiv();
+            predictionDivopen = true;
+            const insulinCalculatorDiv = document.getElementById("insulinCalculatorDiv");
+
+            var closeButton = document.createElement("button");
+            closeButton.innerHTML = "Close";
+            closeButton.classList.add("inputButton");
+            closeButton.style.backgroundColor = "red";
+            closeButton.style.float="right";
+            closeButton.style.width = "80%";
+            closeButton.style.maxWidth = "80px";
+            closeButton.addEventListener("click",clearPredictionDiv);
+            insulinCalculatorDiv.appendChild(closeButton);
+            insulinCalculatorDiv.appendChild(document.createElement("br"));
+
+            /*
+            if(InsulinPredictionFlag){
+                var topLabel = document.createElement("h3");
+                topLabel.style.padding = "20px";
+                topLabel.innerHTML = "Your calculated Dosage is " + sessionStorage.getItem("insulinDosage") + " mg";
+                insulinCalculatorDiv.appendChild(topLabel);
+                return;
+            }
+            */
+            
+            
+            var topLabel = document.createElement("h3");
+            topLabel.style.padding = "20px";
+            topLabel.innerHTML = "Insulin Calculator";
+            insulinCalculatorDiv.appendChild(topLabel);
+
+            var divfordataForCalculation = document.createElement('div');
+            var comboBoxForTypeOfCalculation = document.createElement('select');
+            comboBoxForTypeOfCalculation.classList.add("comboBoxStyling");
+            comboBoxForTypeOfCalculation.id = "predictionSelector";
+            var linearOption = document.createElement('option');
+            linearOption.textContent = "Linear Regression";
+            linearOption.value = "linear";
+            
+            comboBoxForTypeOfCalculation.appendChild(linearOption);
+            var randomForest = document.createElement("option");
+            randomForest.textContent="Random Forest";
+            randomForest.value = "random_forest";
+            comboBoxForTypeOfCalculation.appendChild(randomForest);
+            divfordataForCalculation.appendChild(comboBoxForTypeOfCalculation);
+            insulinCalculatorDiv.appendChild(divfordataForCalculation);
+            console.log("i am here");
+            var buttonTostartPrediction = document.createElement('button');
+            buttonTostartPrediction.id = "makePredictionButton";
+            buttonTostartPrediction.classList.add("inputButton");
+            buttonTostartPrediction.textContent = "Make Prediction";
+            buttonTostartPrediction.addEventListener('click', makePrediction);
+            insulinCalculatorDiv.appendChild(buttonTostartPrediction);
+
+            if(localStorage.getItem("prediction")!= null){
+                var responseMessage = document.createElement("h2");
+                responseMessage.innerHTML = localStorage.getItem("predictionMessage");
+                insulinCalculatorDiv.appendChild(responseMessage);
+            }
+            
+        }
+
+        function makePrediction(){
+            console.log("i am in");
+            const insulinCalculatorDiv = document.getElementById("insulinCalculatorDiv");
+            const glucoseBefore = document.getElementById("glucoseBefore_0");
+            if (glucoseBefore.value === ""){
+                Warning = true;
+                var warning = document.createElement("h3");
+                warning.innerHTML = "Insert your current glucose first";
+                glucoseBefore.classList.add("warning");
+                changePlaceholderColor(glucoseBefore,"black");
+                insulinCalculatorDiv.appendChild(warning);
+                return;
+            }
+
+                const url = getEndPoint("/insulin_prediction");
+                var patientId = sessionStorage.getItem("patientId");
+                
+
+                
+
+                const dataToSend = {
+                    "method" : document.getElementById("predictionSelector").value,
+                    "patientId" : patientId,
+                    "glucoseBefore" : glucoseBefore.value,
+                    "carboInsulin":localStorage.getItem("foodDosage")
+
+                }
+                const jsonString = JSON.stringify(dataToSend, null, 2);
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: jsonString
+                })
+                .then(response => response.json())
+                .then(data => {
+                    
+                    openPredictionResultsDiv(data.result,data.insulin_predict);
+                })
+                .catch(error => {
+                    console.error('Error:', error); // Handle errors
+                });
+
+        }
+
+        function changePlaceholderColor(element, color) {
+            // Create a style element
+            const style = document.createElement('style');
+            // Create the CSS rule
+            const cssRule = `#${element.id}::placeholder { color: ${color}; }`;
+            // Append the CSS rule to the style element
+            style.innerHTML = cssRule;
+            // Append the style element to the head of the document
+            document.head.appendChild(style);
+        }
+
+        //FOOD TABLE
+
+        //Variables for FOOD Table
+
+        var foodtableInputs=[];
+        var foods = [];
+        var line=0;
+        var comboBoxes = [];
+        var foodButtons = [];
+
+
+        function openFoodTableDiv(){
+            if(FoodPredictionFlag) return;
+            if (BlockPredictions) return;
+            if(foodTableActive) return;
+            foodtableInputs=[];
+            foods = [];
+            line=0;
+            comboBoxes = [];
+            foodButtons = [];
+            clearPredictionDiv();
+            foodTableActive=true;
+            const insulinCalculatorDiv = document.getElementById("insulinCalculatorDiv");
+            var table = createFoodTable();
+            insulinCalculatorDiv.appendChild(table);
+
+            var buttonToCalculateFoodCarbon = document.createElement("button")
+            buttonToCalculateFoodCarbon.id = "buttonCalculateFoodCarbon";
+            buttonToCalculateFoodCarbon.classList.add("inputButton");
+            buttonToCalculateFoodCarbon.innerHTML= "Calculate Food Carbon";
+            buttonToCalculateFoodCarbon.addEventListener("click",calculateCarbon);
+            insulinCalculatorDiv.appendChild(buttonToCalculateFoodCarbon);
+
+            createNewLineForFoodTable();
+        }
+
+        function createFoodTable(){
+            var foodTable = document.createElement('table');
+            foodTable.id = "foodTable";
+
+            var foodTableHead = document.createElement("thead");
+            var foodTableHeadRow = document.createElement("tr");
+
+            foodTableHeadRow.appendChild(createTH("Food"));
+            foodTableHeadRow.appendChild(createTH("Type"));
+            foodTableHeadRow.appendChild(createTH("Quantity"));
+            foodTableHeadRow.appendChild(createTH("CarboHydrate"));
+            var closeButton = document.createElement("button");
+            closeButton.innerHTML = "Close";
+            closeButton.classList.add("inputButton");
+            closeButton.style.backgroundColor = "red";
+            closeButton.style.paddingTop = "5px";
+            closeButton.style.paddingBottom = "5px";
+            closeButton.addEventListener("click",clearPredictionDiv);
+            var buttonTH = document.createElement("th");
+            buttonTH.appendChild(closeButton);
+            foodTableHeadRow.appendChild(buttonTH); 
+            foodTableHead.appendChild(foodTableHeadRow);
+            foodTable.appendChild(foodTableHead);
+            var foodTableBody = document.createElement("tbody");
+            foodTableBody.id = "foodTableBody";
+            foodTable.appendChild(foodTableBody);
+            return foodTable;
+        }
+
+        function createTH(content){
+            var th = document.createElement('th');
+            th.innerHTML = content;
+            return th;
+        }
+
+        function createNewLineForFoodTable(){
+            var foodTableBody = document.getElementById("foodTableBody");
+            line++;
+            var tableRow = document.createElement("tr");
+            tableRow.id = line+"_row";
+            var foodComboBoxCell = document.createElement("td");
+
+            let comboBox = document.createElement("select");
+            comboBox.id = line+"_comboBox";
+            comboBox.classList.add("comboBoxStyling");
+            comboBoxes.push(comboBox);
+            comboBox.addEventListener("change", function(){
+                var value = comboBox.value;
+                var selectedValue = value.split("_");
+                setFoodMeasurment(selectedValue[1],comboBox.id);
+            });
+            const url = getEndPoint("/foods_list");
+
+            fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(item => {
+                    var option = document.createElement("option");
+                    option.textContent = item.food_name;
+                    var valueToInsert = line + "_" + item.food_name;
+                    option.value = valueToInsert;
+                    comboBox.add(option);
+                });
+            })
+            .catch(error => {
+                console.log('Error fetching data:', error);
+                //alert("Something went wrong while retriving data");
+            });
+            foodComboBoxCell.appendChild(comboBox)
+            tableRow.appendChild(foodComboBoxCell);
+
+            var measurmentTd = document.createElement("td");
+            measurmentTd.id= line+"_measurment";
+            measurmentTd.textContent = "-";
+            tableRow.appendChild(measurmentTd);
+
+            var foodDosageTd = document.createElement("td");
+            var inputForFoodDosage = document.createElement("input");
+            inputForFoodDosage.classList.add("inputCells");
+            inputForFoodDosage.type = "text";
+            inputForFoodDosage.id = line+"_foodDosage";
+            inputForFoodDosage.placeholder = "Enter preferable dosage";
+
+            //TO CHECK
+            inputForFoodDosage.addEventListener("focusout",calculateCarboForEachLine)
+
+            foodtableInputs.push(inputForFoodDosage);
+            foodDosageTd.appendChild(inputForFoodDosage)
+            tableRow.appendChild(foodDosageTd);
+
+            var carboTd = document.createElement("td");
+            carboTd.id= line+"_carbo";
+            carboTd.textContent = "-";
+            tableRow.appendChild(carboTd);
+
+            var buttonTdForFoodTable = document.createElement("td");
+            var buttonForNewLine = document.createElement("button");
+            buttonForNewLine.innerHTML = "Add new Line";
+            buttonForNewLine.classList.add("inputButton");
+            buttonForNewLine.id = line + "_button";
+            foodButtons.push(buttonForNewLine);
+            buttonForNewLine.addEventListener("click", addnewLine);
+            buttonTdForFoodTable.appendChild(buttonForNewLine);
+
+            tableRow.appendChild(buttonTdForFoodTable)
+            foodTableBody.appendChild(tableRow);
+        }
+
+        function calculateCarboForEachLine(event){
+            var button = event.target;
+            var idArray = button.id.split("_");
+            var carboId = idArray[0] + "_carbo";
+            
+            var values = document.getElementById(idArray[0] + "_comboBox").value.split("_");
+
+            
+            var food = [];
+            var quantity = [];
+            
+            food.push(values[1]);
+            quantity.push(document.getElementById(idArray[0] + "_foodDosage").value);
+            var requestData = {
+                "patientId": sessionStorage.getItem("patientId"),
+                "foods": food,
+                "quantity": quantity
+            };
+
+            // Convert the object to JSON
+            var jsonData = JSON.stringify(requestData);
+
+            const url = getEndPoint("/insulin_food_calculator");
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: jsonData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById(carboId).innerHTML = data.food_carbo;
+            })
+            .catch(error => {
+                // Handle errors
+                console.error("Error:", error);
+            });
+
+        }
+
+        function deleteLineForFoodTable(event) {
+            var button = event.target;
+            var idArray = button.id.split("_");
+            var rowId = idArray[0] + "_row";
+
+            comboBoxes = comboBoxes.filter(comboBox => comboBox.id !== idArray[0] + "_comboBox");
+            foodtableInputs = foodtableInputs.filter(input => input.id !== idArray[0] + "_foodDosage");
+
+            button.removeEventListener("click", deleteLineForFoodTable);
+
+            var tableRow = document.getElementById(rowId);
+            if (tableRow) {
+                tableRow.parentNode.removeChild(tableRow);
+            }
+        }
+
+        function addnewLine(event){
+            var button = event.target;
+            button.innerHTML  = "Delete Line";
+            button.style.backgroundColor = "red";
+            button.removeEventListener("click", addnewLine);
+            button.addEventListener("click", deleteLineForFoodTable);
+            createNewLineForFoodTable();
+        }
+
+        function setFoodMeasurment(selectedValue,id){
+            var lineOfWork = id.split("_");
+
+            var tdOfMeasurment = document.getElementById(lineOfWork[0]+"_measurment");
+            
+
+            const urlToGetFoodData = getEndPoint("/food_dosage");
+
+            const dataToSend = {
+                food: selectedValue 
+            }
+
+            fetch(urlToGetFoodData, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dataToSend)
+            })
+            .then(response => response.json())
+            .then(data => {
+                tdOfMeasurment.textContent = data.food_dosage;
+            })
+            .catch(error => {
+                console.log('Error fetching data:', error);
+                //alert("Something went wrong while retriving data");
+        });
+
+
+
+        }
+     
+        function calculateCarbon(){
+            if(document.getElementById("glucoseBefore_0").value != ""  &&  !InsulinPredictionFlag) return calculateCarbonandLinear();
+
+            var food = [];
+            var quantity = [];
+
+            for(var i=0;i< comboBoxes.length;i++){
+                
+                var values = comboBoxes[i].value.split("_");
+                if (foodtableInputs[i].value == "") continue;
+                food.push(values[1]);
+                quantity.push(foodtableInputs[i].value);
+            }
+            var requestData = {
+                "patientId": sessionStorage.getItem("patientId"),
+                "foods": food,
+                "quantity": quantity,
+                "insulinDose" : localStorage.getItem("insulinDosage"),
+                "indicator" : "0"
+            };
+
+            // Convert the object to JSON
+            var jsonData = JSON.stringify(requestData);
+
+            const url = getEndPoint("/insulin_food_calculator");
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: jsonData
+            })
+            .then(response => response.json())
+            .then(data => {
+                openCarboResultDiv(data.message,data.insulin_dose,data.food_carbo);
+            })
+            .catch(error => {
+                // Handle errors
+                console.error("Error:", error);
+            });
+            
+        }
+       
+        function removeEventListenersFromPredictionDiv(){
+            if(document.contains(document.getElementById("makePredictionButton"))){
+                document.getElementById("makePredictionButton").removeEventListener("click", makePrediction);
+                console.log("make prediction listener disabled")
+            }
+            foodButtons.forEach(button =>{
+                    if(button.innerHTML === "Add new Line") button.removeEventListener("click", addnewLine);
+                    else button.removeEventListener("click", deleteLineForFoodTable);
+            });
+            var i = 0;
+            while(document.getElementById(i+"_foodDosage")){
+                document.getElementById(i + "_foodDosage").removeEventListener("focusout",calculateCarboForEachLine);
+                i++;
+                // returnHERE
+            }
+            if(document.getElementById("closeButton")){
+                document.getElementById("closeButton").removeEventListener("click",clearPredictionDiv);
+            }
+            if(document.getElementById("buttonCalculateFoodCarbon")){
+                document.getElementById("buttonCalculateFoodCarbon").removeEventListener("click",calculateCarbon);
+            }
+            if(document.getElementById("acceptPredictionButton")){
+                document.getElementById("acceptPredictionButton").removeEventListener("click",acceptPredictionButtonListener);
+            }
+            if(document.getElementById("declinePredictionButton")){
+                document.getElementById("declinePredictionButton").removeEventListener("click",clearPredictionDiv);
+            }
+            if(document.getElementById("acceptFoodPredictionButton")){
+                document.getElementById("acceptFoodPredictionButton").removeEventListener("click",acceptFoodPredictionButtonListener);
+            }
+
+
+            //close button eventlistener
+
+        }
+
+        function openPredictionResultsDiv(message,insulinDosage){
+            clearPredictionDiv();
+            const insulinCalculatorDiv = document.getElementById("insulinCalculatorDiv");
+
+            var closeButton = document.createElement("button");
+            closeButton.innerHTML = "Close";
+            closeButton.classList.add("inputButton");
+            closeButton.style.backgroundColor = "red";
+            closeButton.style.float="right";
+            closeButton.style.width = "80%";
+            closeButton.style.maxWidth = "80px";
+            closeButton.addEventListener("click",clearPredictionDiv);
+            insulinCalculatorDiv.appendChild(closeButton);
+            insulinCalculatorDiv.appendChild(document.createElement("br"));
+
+            var responseMessage = document.createElement("h2");
+            responseMessage.innerHTML = message;
+            insulinCalculatorDiv.appendChild(responseMessage);
+            var responseMessage2 = document.createElement("h2");
+            var question = document.createElement("h3");
+            insulinCalculatorDiv.appendChild(document.createElement("br"));
+            question.innerHTML = "Do you want to keep the predicted value";
+            insulinCalculatorDiv.appendChild(document.createElement("br"));
+
+            var declineButton = document.createElement("button");
+            declineButton.classList.add("inputButton");
+            declineButton.style.backgroundColor = "red";
+            declineButton.id = "declinePredictionButton";
+            declineButton.innerHTML = "Decline"
+            declineButton.addEventListener("click",clearPredictionDiv);
+            insulinCalculatorDiv.appendChild(declineButton);
+
+            
+            var acceptButton = document.createElement("button");
+            acceptButton.classList.add("inputButton");
+            acceptButton.style.backgroundColor = "green";
+            acceptButton.id = "acceptPredictionButton";
+            acceptButton.innerHTML= "Accept";
+            acceptButton.addEventListener("click",acceptPredictionButtonListener);
+            insulinCalculatorDiv.appendChild(acceptButton);
+            localStorage.setItem("insulinDosage" , insulinDosage);
+            
+        }
+
+        function acceptPredictionButtonListener(){
+            const insulinCalculatorDiv  = document.getElementById("insulinCalculatorDiv");
+            clearPredictionDiv();
+            var closeButton = document.createElement("button");
+            closeButton.innerHTML = "Close";
+            closeButton.classList.add("inputButton");
+            closeButton.style.backgroundColor = "red";
+            closeButton.style.float="right";
+            closeButton.style.width = "80%";
+            closeButton.style.maxWidth = "80px";
+            closeButton.addEventListener("click",clearPredictionDiv);
+            insulinCalculatorDiv.appendChild(closeButton);
+            insulinCalculatorDiv.appendChild(document.createElement("br"));
+
+            var responseMessage = document.createElement("h2");
+            responseMessage.innerHTML = "The value has been inserted to Insulin Dosage field"
+            insulinCalculatorDiv.appendChild(responseMessage);
+            var insulin_dosage = localStorage.getItem("insulinDosage");
+            if(FoodPredictionFlag){
+                let insulin_dosage_float = Number(insulin_dosage);
+                insulin_dosage_float += Number(localStorage.getItem("foodDosage"));
+                document.getElementById("insulinDosage_0").value = insulin_dosage_float;
+            }
+            else{
+                document.getElementById("insulinDosage_0").value = insulin_dosage;
+            }
+            
+            
+            InsulinPredictionFlag = true;
+        }
+
+        function openCarboResultDiv(message,foodDosage,foodCarbo){
+            clearPredictionDiv();
+            const insulinCalculatorDiv = document.getElementById("insulinCalculatorDiv");
+
+            var closeButton = document.createElement("button");
+            closeButton.innerHTML = "Close";
+            closeButton.classList.add("inputButton");
+            closeButton.style.backgroundColor = "red";
+            closeButton.style.float="right";
+            closeButton.style.width = "80%";
+            closeButton.style.maxWidth = "80px";
+            closeButton.addEventListener("click",clearPredictionDiv);
+            insulinCalculatorDiv.appendChild(closeButton);
+            insulinCalculatorDiv.appendChild(document.createElement("br"));
+
+            var responseMessage = document.createElement("h2");
+            responseMessage.innerHTML = message;
+            insulinCalculatorDiv.appendChild(responseMessage);
+            localStorage.setItem("foodDosage",foodDosage);
+            localStorage.setItem("foodCarbo", foodCarbo);
+            var responseMessage2 = document.createElement("h2");
+            var question = document.createElement("h3");
+            insulinCalculatorDiv.appendChild(document.createElement("br"));
+            question.innerHTML = "Do you want to keep the predicted values";
+            insulinCalculatorDiv.appendChild(document.createElement("br"));
+
+            var declineButton = document.createElement("button");
+            declineButton.classList.add("inputButton");
+            declineButton.style.backgroundColor = "red";
+            declineButton.id = "declinePredictionButton";
+            declineButton.innerHTML = "Decline"
+            declineButton.addEventListener("click",clearPredictionDiv);
+            insulinCalculatorDiv.appendChild(declineButton);
+
+            
+            var acceptButton = document.createElement("button");
+            acceptButton.classList.add("inputButton");
+            acceptButton.style.backgroundColor = "green";
+            acceptButton.id = "acceptFoodPredictionButton";
+            acceptButton.innerHTML= "Accept";
+            acceptButton.addEventListener("click",acceptFoodPredictionButtonListener);
+            insulinCalculatorDiv.appendChild(acceptButton);
+            localStorage.setItem("foodDosage" , foodDosage);
+            localStorage.setItem("foodCarbo", foodCarbo);
+            
+        }
+   
+        function loadAllPatients(){
+            if(getAdmin()){
+                var adminDiv = document.getElementById("admin");
+
+                adminDiv.style.textAlign = "center";
+                var select = document.createElement("select");
+                select.id = "adminComboBox";
+                select.style.marginRight = "30px";
+                fetch(getEndPoint("/loadAllPatients"))
+                .then(response => response.json())
+                .then(data =>{
+                    data.forEach(item =>{
+                        var option = document.createElement("option");
+                        option.value =  item.patientId;
+                        option.textContent = item.patientId;
+                        select.appendChild(option);
+                    })
+                })
+                .catch(error => {
+                    console.error('Error:', error); // Handle errors
+                });
+                
+                adminDiv.appendChild(select);
+                var button = document.createElement("button");
+                button.innerHTML = "Reload Page With The Selected ID";
+                button.addEventListener("click", function(){
+                    var combobox = document.getElementById("adminComboBox");
+                    var currentid = combobox.selectedValue;
+                    sessionStorage.setItem("userId", currentid);
+                    sessionStorage.setItem("userType", "PATIENT");
+                    sessionStorage.setItem("patientId", currentid);
+                    sessionStorage.setItem("doctorId", "NaN");
+                    sessionStorage.setItem("login_status", "Success");
+                    window.location.reload();
+
+                })
+                adminDiv.appendChild(button);
+                
+
+            }
+            else return;
+            
+        }
+
+        function acceptFoodPredictionButtonListener(){
+            const insulinCalculatorDiv  = document.getElementById("insulinCalculatorDiv");
+            clearPredictionDiv();
+            var closeButton = document.createElement("button");
+            closeButton.innerHTML = "Close";
+            closeButton.classList.add("inputButton");
+            closeButton.style.backgroundColor = "red";
+            closeButton.style.float="right";
+            closeButton.style.width = "80%";
+            closeButton.style.maxWidth = "80px";
+            closeButton.addEventListener("click",clearPredictionDiv);
+            insulinCalculatorDiv.appendChild(closeButton);
+            insulinCalculatorDiv.appendChild(document.createElement("br"));
+
+            var responseMessage = document.createElement("h2");
+            responseMessage.innerHTML = "The value has been inserted to Insulin Dosage field and Food Carbo field";
+            insulinCalculatorDiv.appendChild(responseMessage);
+            var insulin_dosage = localStorage.getItem("foodDosage");
+            
+
+            if(InsulinPredictionFlag){
+                let insulin_dosage_float = Number(insulin_dosage);
+                insulin_dosage_float += Number(localStorage.getItem("insulinDosage"));
+                document.getElementById("insulinDosage_0").value = insulin_dosage_float;
+            }
+            else if(!InsulinPredictionFlag && localStorage.getItem("automaticPrediction") ===  "TRUE"){
+                let insulin_dosage_float = Number(insulin_dosage);
+                insulin_dosage_float += Number(localStorage.getItem("autoPrediction"));
+                document.getElementById("insulinDosage_0").value = insulin_dosage_float;
+            }
+            else{
+                document.getElementById("insulinDosage_0").value = insulin_dosage;
+            }
+            document.getElementById("foodCarbon_0").value = localStorage.getItem("foodCarbo");
+            
+            
+            FoodPredictionFlag = true;
+
+        }
+
+        function insertNewData(){
+            const urlToSendWeight = getEndPoint("/change_patients_info");
+            var patientId = sessionStorage.getItem("patientId");
+
+            const dataToSend = {
+                    "patientId": patientId ,
+                    "age": document.getElementById("age").value,
+                    "weight": document.getElementById("weight").value,
+                    "diagnosis": document.getElementById("diagnosis").value,
+                    "carbo": document.getElementById("carbon").value,
+                    "correctionFactor" : document.getElementById("correction_factor").value,
+                    "bloodSugarTarget" : document.getElementById("blood_sugar_target").value
+                }
+
+            const jsonString = JSON.stringify(dataToSend, null, 2);
+            fetch(urlToSendWeight, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: jsonString
+                })
+                .then(response => response.json())
+                .then(data => {
+                    //alert("Saved Successful");
+                })
+                .catch(error => {
+                    console.error('Error:', error); // Handle errors
+                });    
+        }
+
+        function handleFileSelect(event) {
+            var selectedFile = event.target.files[0];
+            console.log('Selected file:', selectedFile);
+        }
+
+        function uploadFile(){
+            var fileInput = document.getElementById('fileInput');
+            var file = fileInput.files[0];
+
+            if (file) {
+                var formData = new FormData();
+                formData.append('excelFile', file);
+                formData.append('patientId',sessionStorage.getItem("patientId"));
+                fetch(getEndPoint("/excel_insertion"), {
+                method: 'POST',
+                body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                console.log('File uploaded successfully:', data);
+                })
+                .catch(error => {
+                console.error('Error uploading file:', error);
+                });
+            } else {
+                console.log('Please select a file to upload.');
+            }
+        }
+
+    </script>
+
+    <script>
+        function loadDates(flag){
+            const url = getEndPoint("/load_dates");
+            var dateSelect;
+            var date;
+
+            if(flag){
+                clearSelectTo();
+                dateSelect = document.getElementById("dateSelectorTo"); 
+                date = document.getElementById("dateSelectorFrom").value;
+            }
+            else{
+                dateSelect = document.getElementById("dateSelectorFrom");
+                date = "01.01.0001" ;
+            }
+
+            const dataTSend = {
+                "patientId" : sessionStorage.getItem("patientId"),
+                "date" : date
+            }
+
+            const jsonString = JSON.stringify(dataTSend, null, 2);
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: jsonString
+            })
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(item =>{
+
+                    var option = document.createElement("option");
+                    option.value = item.date;
+                    option.innerHTML = item.date;
+                    
+
+                    dateSelect.appendChild(option);
+                })
+
+                if(!flag) loadDates(true);
+                
+            })
+            .catch(error => {
+                console.error('Error:', error); // Handle errors
+            });
+        }
+
+        
+
+        function loadDiagram(event){
+            const url = getEndPoint("/load_diagrams");
+
+            
+            var patientId = sessionStorage.getItem("patientId");
+            var select1 = document.getElementById("diagramComboBox").value;
+            var select2 = document.getElementById("dateSelectorFrom").value;
+            var select3 = document.getElementById("dateSelectorTo").value;
+            
+        
+
+            const dataToSend = {
+                "diagramType" : select1,
+                "patientId" : patientId,
+                "dateFrom": select2,
+                "dateTo" : select3
+            }
+
+            changeImage(url,dataToSend);
+            
+        
+        }
+
+        function clearSelectTo(){
+            var element= document.getElementById("dateSelectorTo");
+
+            while(element.firstChild){
+                element.removeChild(element.firstChild);
+            }
+        }
+
+        function changeImage(url,dataToSend){
+            const element = document.getElementById("message");
+            while(element.firstChild){
+                element.removeChild(element.firstChild);
+            }
+
+            const jsonString = JSON.stringify(dataToSend, null, 2);
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: jsonString
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const imageUrl = URL.createObjectURL(blob);
+                const imgElement = document.getElementById("loadDiagram");
+                imgElement.src = imageUrl;
+            })
+            .catch(error => {
+                console.error('Error:', error); // Handle errors
+                
+            });
+
+            if(document.getElementById("diagramComboBox").value == "TimeInRange"){
+                const messageUrl = getEndPoint("/load_diagram_message");
+                
+                var select2 = document.getElementById("dateSelectorFrom").value;
+                var select3 = document.getElementById("dateSelectorTo").value;    
+                const dataTSend = {
+                    "patientId" : sessionStorage.getItem("patientId"),
+                    "dateFrom" : document.getElementById("dateSelectorTo").value,
+                    "dateTo" : document.getElementById("dateSelectorTo").value
+                }
+
+                const json = JSON.stringify(dataTSend, null, 2);
+                fetch(messageUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: json
+                })
+                .then(response => response.json())
+                .then(data => {
+
+                    const messageElement = document.getElementById("message");
+                    var h3= document.createElement('h3');
+                    h3.innerHTML = data.glucose_message;
+                    
+                    if(data.status == "good"){
+                        h3.style.color = "green";
+                    }
+                    else h3.style.color = "red";
+
+                    h3.classList.add("message");
+                    messageElement.appendChild(h3);
+                })
+                .catch(error => {
+                    console.error('Error:', error); // Handle errors
+                });
+            }
+
+        }
+
+
+        function calculateCarbonandLinear(){
+        
+        localStorage.setItem("automaticPrediction", "TRUE");
+
+        const dataToSend = {
+                    "method" : "linear",
+                    "patientId" : patientId,
+                    "glucoseBefore" : document.getElementById("glucoseBefore_0").value,
+                    "carboInsulin":localStorage.getItem("foodDosage")
+                }
+                const jsonString = JSON.stringify(dataToSend, null, 2);
+                fetch(getEndPoint("/insulin_prediction"), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: jsonString
+                })
+                .then(response => response.json())
+                .then(data => {
+                    localStorage.setItem("autoPrediction", data.insulin_predict);
+                    var food = [];
+                    var quantity = [];
+
+                    for(var i=0;i< comboBoxes.length;i++){
+                        
+                        var values = comboBoxes[i].value.split("_");
+
+                        food.push(values[1]);
+                        quantity.push(foodtableInputs[i].value);
+                    }
+                    var requestData = {
+                        "patientId": sessionStorage.getItem("patientId"),
+                        "foods": food,
+                        "quantity": quantity,
+                        "insulinDose" : data.insulin_predict,
+                        "indicator" : "1"
+                        
+                    };
+
+                    // Convert the object to JSON
+                    var jsonData = JSON.stringify(requestData);
+
+                    const url = getEndPoint("/insulin_food_calculator");
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: jsonData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        openCarboResultDiv(data.message,data.insulin_dose,data.food_carbo);
+                    })
+                    .catch(error => {
+                        // Handle errors
+                        console.error("Error:", error);
+                    });
+                
+                    }
+
+                    
+                )
+                .catch(error => {
+                    console.error('Error:', error); // Handle errors
+                });
+            }        
+
+        
+
+
+
+        
+
+    </script>
+
+
+</html>

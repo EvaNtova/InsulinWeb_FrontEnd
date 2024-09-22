@@ -1,0 +1,368 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Contact</title>
+    <script>
+        window.onload = function() {
+            loadMessages();
+        };
+
+        //ALL OK
+    </script>
+
+    <script src="CommonOperations.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        loadAccesibilityList();
+    });
+    </script>
+    <style>
+        /* Basic styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            position: relative;
+        }
+        header img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        header h1 {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            background-color: #f1f1f1;
+            text-align: center;
+        }
+        nav ul li {
+            display: inline;
+            padding: 10px 20px;
+        }
+        nav ul li a {
+            text-decoration: none;
+            color: #333;
+        }
+        section {
+            margin-bottom: 20%;
+            padding: 20px;
+            background-color: #f9f9f9;
+            text-align: center;
+        }
+        footer {
+            text-align: center;
+            background-color: #333;
+            color: white;
+            padding: 10px;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #comboBoxContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #comboBox {
+            width: 30%;
+            margin-right: 10px;
+        }
+
+        #inputContainer {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #messageInput {
+            width: 60%;
+            margin-right: 10px;
+        }
+
+        #sendButton {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .message-list {
+            list-style: none;
+            padding: 0;
+            max-width: 400px; /* Adjust the width as needed */
+            margin: auto;
+        }
+
+        /* Style for each message item */
+        .message-item {
+            border: 1px solid #ccc;
+            margin: 5px 0;
+            padding: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        /* Style for the arrow icon */
+        .arrow-icon {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            width: 15px;
+            height: 15px;
+            border: solid #333;
+            border-width: 0 2px 2px 0;
+            display: inline-block;
+            padding: 3px;
+            transition: transform 0.3s ease; /* Optional: Add a smooth transition effect */
+        }
+        .unread{
+            background-color: aqua;
+        }
+
+        /* Rotate the arrow when the message is expanded */
+        .message-item.expanded .arrow-icon {
+            transform: translateY(-50%) rotate(-45deg);
+        }
+
+        /* Style for the message content (hidden by default) */
+        .message-content {
+            display: none;
+            margin-top: 10px;
+        }
+
+        /* Display the message content when the message is expanded */
+        .message-item.expanded .message-content {
+            display: block;
+        }
+        #leftDiv{
+            float:left;
+            width: 50%;
+            margin:auto;
+        }
+        #rightDiv{
+            float:right;
+            width: 50%;
+            margin:auto;
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <img src="Top_Image.png" alt="Flexible Image">
+    </header>
+
+    <nav>
+        <ul id="menu">
+            
+        </ul>
+    </nav>
+    
+    <section id="rightsection">
+        <div id="leftDiv">
+        <h1 style="margin: auto;"> Inbox </h1>
+        <ul id="messageContainerinbox" class="message-list">
+            
+        </ul>
+        </div>
+        <div id="rightDiv">
+            <h1 style="margin: auto;"> Outbox </h1>
+            <ul id="messageContaineroutbox" class="message-list">
+                
+            </ul>
+            </div>
+    </section>
+
+    <section>
+
+    <div id="comboBoxContainer">
+        <H5>Send to:</H5>
+        <select id="comboBox"></select>
+    </div>
+
+    <div id="inputContainer">
+        <textarea id="messageInput" rows="4" placeholder="Type your message here..."></textarea>
+        <button id="sendButton" onclick="sendMessage()">Send</button>
+    </div>
+    </section>
+
+    <script>
+
+        function loadMessages(){
+
+            
+            var userId = sessionStorage.getItem("userId");
+            let url = getEndPoint("/load_messages") 
+            const dataToSend = {
+                "userId": userId
+            }
+            const jsonString = JSON.stringify(dataToSend, null, 2);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: jsonString
+            })
+            .then(response => response.json())
+            .then(data => {
+
+                data.forEach( item => {
+                    createMessageItem(item);
+                })
+            })
+            .catch(error => {
+                console.error('Error:', error); // Handle errors
+            });
+            loadAvailableRecievers();
+
+        }
+
+        function createMessageItem(message){
+            const messageContainerinbox = document.getElementById('messageContainerinbox');
+            const messageContainerOutbox = document.getElementById('messageContaineroutbox');
+            const messageItem = document.createElement("li");
+                    
+            if(message.markedAsRead == "unread"){
+                messageItem.classList.add("message-item","unread");
+            }
+            else{
+                messageItem.classList.add("message-item");
+            }
+
+            messageItem.id = message.messageId;
+            let divSender = document.createElement('div');
+            let  senderAndTime = message.otherUser + "  -  " + message.timestamp;
+            divSender.innerHTML = senderAndTime;
+            let divArrow = document.createElement('div');
+            divArrow.classList.add("arrow-icon");
+            let divContent = document.createElement('div');
+            divContent.classList.add("message-content");
+            divContent.innerHTML = message.content;
+
+            messageItem.addEventListener("click", function(){
+                messageItem.classList.toggle('expanded');
+                markedAsRead(this);
+            })
+
+            messageItem.appendChild(divSender);
+            messageItem.appendChild(divArrow);
+            messageItem.appendChild(divContent);
+            if(message.userType == "0"){
+                messageContainerOutbox.appendChild(messageItem);
+            }
+            else if(message.userType == "1"){
+                messageContainerinbox.appendChild(messageItem);
+            }
+
+        }
+
+        function loadAvailableRecievers(){
+            let comboBox = document.getElementById("comboBox");
+
+            const url  = getEndPoint("/list_of_receivers");
+
+            fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(item => {
+                    var option = document.createElement("option");
+                    option.text = item.name  + " - " + item.userType;
+                    option.value = item.userId;
+                    comboBox.add(option);
+                });
+            })
+            .catch(error => {
+                    console.log('Error fetching data:', error);
+                    alert("Something went wrong while retriving data");
+            });
+        }
+
+        function sendMessage(){
+            let userId = sessionStorage.getItem("userId");
+            let content = document.getElementById("messageInput").value;
+            const url = getEndPoint("/send_messages");
+
+            const dataToSend = {
+                "userId": userId,
+                "content" : content,
+                "sendTo" : document.getElementById("comboBox").value
+            }
+
+            const jsonString = JSON.stringify(dataToSend, null, 2);
+
+            fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: jsonString
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert("Message Send");
+                document.getElementById("messageInput").value = "";
+            })
+            .catch(error => {
+                console.error('Error:', error); // Handle errors
+            });   
+
+        }
+        
+        function markedAsRead(messageItem) {
+            if(!messageItem.classList.contains('unread')) return;
+            else{
+                messageItem.classList.remove('unread');
+
+                const url = getEndPoint("/read_messages");
+
+                
+                const dataToSend = {
+                        "messageId": messageItem.id,
+						"userId" : sessionStorage.getItem("userId")
+                    }
+
+                const jsonString = JSON.stringify(dataToSend, null, 2);
+                fetch(url, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: jsonString
+                    })
+                .then(response => response.json())
+                .catch(error => {
+                    alert("Failed to fetch data");
+                    console.error('Error:', error); // Handle errors
+                })
+            ;}
+        }
+
+
+
+    </script>
+</body>
+</html>

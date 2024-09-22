@@ -1,0 +1,3 @@
+1. Open with your browser any html page and it will redirect you to Login page
+2. Use as username the id of the User and as Password "P" + userId 
+3. For test purposes I used the patient 10075

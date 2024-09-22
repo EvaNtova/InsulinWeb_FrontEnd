@@ -1,0 +1,375 @@
+<html>
+<head>
+    <script src="CommonOperations.js"></script>
+    <script>
+        window.onload = function() {
+            loadAccesibilityList();
+            loadPatients();
+            getDoctorsData();
+            welcomeMessage();
+            //ALL OK
+
+        };
+    </script>
+    <meta charset="UTF-8">
+    <title>Patients</title>
+    
+
+    
+    
+    <style>
+        /* Basic styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            position: relative;
+        }
+        header img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        header h1 {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            background-color: #f1f1f1;
+            text-align: center;
+        }
+        nav ul li {
+            display: inline;
+            padding: 10px 20px;
+        }
+        nav ul li a {
+            text-decoration: none;
+            color: #333;
+        }
+        section {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            text-align: center; 
+        
+        }
+        footer {
+            text-align: center;
+            background-color: #333;
+            color: white;
+            padding: 10px;
+        }
+        #patientTable {
+            border-collapse: collapse;
+            width: 80%; /* Adjust as needed */
+            margin-top: 20px; /* Adjust as needed */
+            text-align: center;
+            margin: auto;
+        }
+
+        #patientTable th,
+        #patientTable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            /* Additional styling for table cells */
+        }
+
+        #patientTable th {
+            background-color: #f2f2f2; /* Header background color */
+            /* Additional styling for table header cells */
+            text-align: center;
+        }
+        #doctorTable {
+            border-collapse: collapse;
+            width: 80%; /* Adjust as needed */
+            margin-top: 20px; /* Adjust as needed */
+            text-align: center;
+            margin: auto;
+        }
+
+        #doctorTable th,
+        #doctorTable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            /* Additional styling for table cells */
+        }
+
+        #doctorTable th {
+            background-color: #f2f2f2; /* Header background color */
+            /* Additional styling for table header cells */
+            text-align: center;
+        }
+
+        .patient-list {
+            list-style: none;
+            padding: 0;
+            max-width: 800px; /* Adjust the width as needed */
+            margin: auto;
+            max-height: 300px;
+            overflow-y: auto; /*Scrollable list*/
+        }
+
+        /* Style for each message item */
+        .patient-item {
+            border: 1px solid #ccc;
+            margin: 5px 0;
+            padding: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        /* Style for the arrow icon */
+        .arrow-icon {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            width: 15px;
+            height: 15px;
+            border: solid #333;
+            border-width: 0 2px 2px 0;
+            display: inline-block;
+            padding: 3px;
+            transition: transform 0.3s ease; /* Optional: Add a smooth transition effect */
+        }
+
+        /* Rotate the arrow when the message is expanded */
+        .patient-item.expanded .arrow-icon {
+            transform: translateY(-50%) rotate(-45deg);
+        }
+
+        /* Style for the message content (hidden by default) */
+        .patient-content {
+            display: none;
+            margin-top: 10px;
+        }
+
+        /* Display the message content when the message is expanded */
+        .patient-item.expanded .patient-content {
+            display: block;
+        }
+        .saveButton {
+            margin-top: 30px;
+            margin-left: 20px;
+            margin-right: 20px;
+            padding: 8px 12px;
+            background-color: #007bff; /* Example button color */
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 177px;
+        }
+    </style>
+</head>
+    <body>
+        <header>
+            <img src="Top_Image.png" alt="Flexible Image">
+        </header>
+    
+        <nav>
+            <ul id="menu">
+                
+            </ul>
+        </nav>
+
+        <div id="welcomeMessage"></div>
+
+
+        <section>
+            <div class="table-container">
+                <table id="doctorTable">
+                    <tbody>
+                        <tr>
+                            <td>ID</td>
+                            <td id="doctorsID"></td>
+                        </tr>
+                       <tr>
+                        <td>NAME</td>
+                        <td id="name"></td>
+                       </tr>
+                       <tr>
+                        <td>SURNAME</td>
+                        <td id="surname"></td>
+                       </tr>
+                       <tr>
+                        <td>OFFICE ADDRESS</td>
+                        <td id="address"></td>
+                       </tr>
+                       <tr>
+                        <td>AGE</td>
+                        <td id="age"></td>
+                       </tr>
+                       <tr>
+                        <td>E-MAIL</td>
+                        <td id="email"></td>
+                       </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <section>
+        <h1 style="margin: auto;"> Patients </h1>
+        <ul id="patientsContainer" class="patient-list">
+            
+        </ul>
+
+        
+        </section>
+        <script>
+
+
+
+
+            function loadPatients(){
+                var doctorId = sessionStorage.getItem("doctorId");
+                let url = getEndPoint("/list_of_patients");
+                const dataToSend = {
+                    "doctorId": doctorId
+                }
+                const jsonString = JSON.stringify(dataToSend, null, 2);
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: jsonString
+                })
+                .then(response => response.json())
+                .then(data => {
+
+                    data.forEach( item => {
+                        createPatientBox(item);
+                    })
+                })
+                .catch(error => {
+                    console.error('Error:', error); // Handle errors
+                });
+            }
+
+            function createPatientBox(patientData){
+            const patientContainer = document.getElementById('patientsContainer');
+            const patientBox = document.createElement("li");
+            patientBox.classList.add("patient-item");        
+            patientBox.id = patientData.patient_id;
+
+            let divPatient = document.createElement('div');
+            let name = patientData.name + "  -  " + patientData.surname;
+            divPatient.innerHTML = name;
+            let divArrow = document.createElement('div');
+            divArrow.classList.add("arrow-icon");
+            let divContent = document.createElement('div');
+            divContent.classList.add("patient-content");
+
+            let table = document.createElement("table");
+            let tableBody = document.createElement("tbody");
+
+            
+
+            tableBody.appendChild(craateRow("Patient ID:",patientData.patient_id));
+            tableBody.appendChild(craateRow("Gender:",patientData.gender));
+            tableBody.appendChild(craateRow("Age:",patientData.age));
+
+
+            table.appendChild(tableBody)
+            
+
+            patientBox.addEventListener("click", function(){
+                patientBox.classList.toggle('expanded');
+            })
+
+            let visitButton = document.createElement("button");
+            visitButton.classList.add("saveButton");
+            visitButton.id = patientData.patient_id;
+            visitButton.innerHTML= "Visit Patient";
+            visitButton.addEventListener('click',visitPatient);
+
+
+
+            divContent.appendChild(table);
+            divContent.appendChild(visitButton);
+            patientBox.appendChild(divPatient);
+            patientBox.appendChild(divArrow);
+            patientBox.appendChild(divContent);
+            //patientBox.appendChild(visitButton);
+            patientContainer.appendChild(patientBox);
+
+        }
+        
+        function visitPatient(event){
+            const clickedButton = event.target;
+
+            let patient_id = clickedButton.id;
+
+            sessionStorage.setItem("patientId", patient_id);
+            window.location.href = "Doctor_Patient_View.html";
+
+        }
+
+        function craateRow(cell1_data,cell2_data){
+            let row = document.createElement("tr");
+
+            let cell1 = document.createElement("td");
+            cell1.innerHTML = cell1_data;
+            let cell2 = document.createElement("td");
+            cell2.innerHTML = cell2_data;
+
+            row.appendChild(cell1);
+            row.appendChild(cell2);
+            return row;
+
+        }
+
+        function getDoctorsData(){
+            var doctorId = sessionStorage.getItem("doctorId");
+
+                let url = getEndPoint("/doctor_details");
+                const dataToSend = {
+                    "doctorId": doctorId
+                }
+                const jsonString = JSON.stringify(dataToSend, null, 2);
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: jsonString
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("doctorsID").innerHTML = data.doctorId;
+                    document.getElementById("name").innerHTML = data.name;
+                    document.getElementById("surname").innerHTML = data.surname;
+                    document.getElementById("address").innerHTML = data.officeAddress;
+                    document.getElementById("age").innerHTML = data.age;
+                    document.getElementById("email").innerHTML = data.email;  
+                })
+                .catch(error => {
+                    console.error('Error:', error); // Handle errors
+                });
+
+        }
+
+
+
+            
+        </script>
+    </body>
+</html>
